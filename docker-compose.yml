@@ -1,0 +1,16 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: soccer
+      POSTGRES_PASSWORD: soccer
+      POSTGRES_DB: soccer_showdown
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soccer"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
