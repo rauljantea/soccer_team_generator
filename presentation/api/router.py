@@ -3,16 +3,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from application.use_cases.play_match import TeamNotFoundError
 from config.database import get_session
 from domain.models.models import Lineup
 from persistence.repositories.repositories import (
-    SQLAlchemyTeamRepository,
+    SQLAlchemyTeamRepository, SQLAlchemyMatchRepository,
 )
-from presentation.dependencies import build_use_case
+from presentation.dependencies import build_use_case, build_play_match_use_case
 from presentation.schemas.schemas import (
     GenerateTeamRequest,
     PlayerResponse,
-    TeamResponse,
+    TeamResponse, MatchResponse, MatchEventResponse, PlayMatchRequest,
 )
 
 router = APIRouter(prefix="/api/v1", tags=["showdown"])
@@ -36,6 +37,18 @@ def _team_to_response(team) -> TeamResponse:
         total_soccer_power=team.total_soccer_power,
     )
 
+def _match_to_response(match) -> MatchResponse:
+    return MatchResponse(
+        id=match.id,
+        home_team=_team_to_response(match.home_team),
+        away_team=_team_to_response(match.away_team),
+        home_score=match.home_score,
+        away_score=match.away_score,
+        events=[
+            MatchEventResponse(minute=e.minute, text=e.text)
+            for e in match.events
+        ],
+    )
 
 @router.post("/teams/generate", response_model=TeamResponse, status_code=201)
 async def generate_team(
@@ -74,3 +87,38 @@ async def get_team(
     if team is None:
         raise HTTPException(status_code=404, detail=f"Team {team_id} not found")
     return _team_to_response(team)
+
+@router.post("/matches/play", response_model=MatchResponse, status_code=201)
+async def play_match(
+        request: PlayMatchRequest,
+        session: AsyncSession = Depends(get_session),
+) -> MatchResponse:
+    try:
+        use_case = build_play_match_use_case(session)
+        match = await use_case.execute(request.home_team_id, request.away_team_id)
+    except TeamNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    return _match_to_response(match)
+
+
+@router.get("/matches", response_model=list[MatchResponse])
+async def list_matches(
+        limit: int = 20,
+        session: AsyncSession = Depends(get_session),
+) -> list[MatchResponse]:
+    repo = SQLAlchemyMatchRepository(session)
+    matches = await repo.list_recent(limit=limit)
+    return [_match_to_response(m) for m in matches]
+
+
+@router.get("/matches/{match_id}", response_model=MatchResponse)
+async def get_match(
+        match_id: int,
+        session: AsyncSession = Depends(get_session),
+) -> MatchResponse:
+    repo = SQLAlchemyMatchRepository(session)
+    match = await repo.get_by_id(match_id)
+    if match is None:
+        raise HTTPException(status_code=404, detail=f"Match {match_id} not found")
+    return _match_to_response(match)

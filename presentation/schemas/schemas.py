@@ -35,3 +35,22 @@ class TeamResponse(BaseModel):
     lineup: dict[str, int]
     players: list[PlayerResponse]
     total_soccer_power: float
+
+class PlayMatchRequest(BaseModel):
+    home_team_id: int
+    away_team_id: int
+
+
+class MatchEventResponse(BaseModel):
+    minute: int
+    text: str
+
+
+class MatchResponse(BaseModel):
+    id: int | None = None
+    home_team: TeamResponse
+    away_team: TeamResponse
+    home_score: int
+    away_score: int
+    events: list[MatchEventResponse]
+

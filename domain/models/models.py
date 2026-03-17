@@ -93,3 +93,19 @@ class Team:
     @property
     def attackers(self) -> tuple[Player, ...]:
         return tuple(p for p in self.players if p.position == Position.OFFENCE)
+
+@dataclass(frozen=True)
+class MatchEvent:
+    """A single commentary line from the match."""
+    minute: int
+    text: str
+
+
+@dataclass(frozen=True)
+class Match:
+    home_team: Team
+    away_team: Team
+    home_score: int
+    away_score: int
+    events: tuple[MatchEvent, ...]
+    id: int | None = None

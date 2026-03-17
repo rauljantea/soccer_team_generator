@@ -46,3 +46,39 @@ class TeamORM(Base):
     players: Mapped[list["PlayerORM"]] = relationship(
         "PlayerORM", back_populates="team", cascade="all, delete-orphan"
     )
+
+class MatchEventORM(Base):
+    __tablename__ = "match_events"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    match_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("matches.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    minute: Mapped[int] = mapped_column(Integer, nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+
+    match: Mapped["MatchORM"] = relationship("MatchORM", back_populates="events")
+
+
+class MatchORM(Base):
+    __tablename__ = "matches"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    home_team_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("teams.id"), nullable=False, index=True
+    )
+    away_team_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("teams.id"), nullable=False, index=True
+    )
+    home_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    away_score: Mapped[int] = mapped_column(Integer, nullable=False)
+    played_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+    events: Mapped[list["MatchEventORM"]] = relationship(
+        "MatchEventORM", back_populates="match", cascade="all, delete-orphan",
+        order_by="MatchEventORM.minute"
+    )
