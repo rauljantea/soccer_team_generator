@@ -52,3 +52,7 @@ poetry run pytest --cov=. --cov-report=term-missing #with coverage
 1. Create `adapters/marvel.py` implementing `UniverseInterface`
 2. Add `MARVEL = "marvel"` to `Universe` in `domain/models.py`
 3. Register it in `main.py` ar start up
+
+## AWS deployment Diagram
+
+![aws_deployment_overview.png](aws_deployment_overview.png)
