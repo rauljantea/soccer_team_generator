@@ -56,3 +56,7 @@ poetry run pytest --cov=. --cov-report=term-missing #with coverage
 ## AWS deployment Diagram
 
 ![aws_deployment_overview.png](aws_deployment_overview.png)
+
+## Stretch Goals
+![resilience_pokeapi.png](resilience_pokeapi.png)
+![security_scalability.png](security_scalability.png)
