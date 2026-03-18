@@ -9,7 +9,7 @@ from domain.models.models import Lineup, Player, Position, Team, Universe, Match
 from persistence.models.models import PlayerORM, TeamORM, MatchORM, MatchEventORM
 
 
-class SQLAlchemyTeamRepository(TeamRepositoryInterface):
+class TeamRepository(TeamRepositoryInterface):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -76,7 +76,7 @@ class SQLAlchemyTeamRepository(TeamRepositoryInterface):
         )
 
 
-class SQLAlchemyMatchRepository(MatchRepositoryInterface):
+class MatchRepository(MatchRepositoryInterface):
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -123,7 +123,7 @@ class SQLAlchemyMatchRepository(MatchRepositoryInterface):
         return matches
 
     async def _to_domain(self, orm: MatchORM) -> Match:
-        team_repo = SQLAlchemyTeamRepository(self._session)
+        team_repo = TeamRepository(self._session)
         home = await team_repo.get_by_id(orm.home_team_id)
         away = await team_repo.get_by_id(orm.away_team_id)
         events = tuple(

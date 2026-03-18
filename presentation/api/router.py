@@ -7,9 +7,9 @@ from application.use_cases.play_match import TeamNotFoundError
 from config.database import get_session
 from domain.models.models import Lineup
 from persistence.repositories.repositories import (
-    SQLAlchemyTeamRepository, SQLAlchemyMatchRepository,
+    TeamRepository, MatchRepository,
 )
-from presentation.dependencies import build_use_case, build_play_match_use_case
+from presentation.dependencies import build_team_generator_use_case, build_play_match_use_case
 from presentation.schemas.schemas import (
     GenerateTeamRequest,
     PlayerResponse,
@@ -57,7 +57,7 @@ async def generate_team(
 ) -> TeamResponse:
     try:
         lineup = Lineup(defenders=request.defenders, attackers=request.attackers)
-        use_case = build_use_case(request.universe, session)
+        use_case = build_team_generator_use_case(request.universe, session)
         team = await use_case.execute(lineup)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -72,7 +72,7 @@ async def list_teams(
         limit: int = 20,
         session: AsyncSession = Depends(get_session),
 ) -> list[TeamResponse]:
-    repo = SQLAlchemyTeamRepository(session)
+    repo = TeamRepository(session)
     teams = await repo.list_recent(limit=limit)
     return [_team_to_response(t) for t in teams]
 
@@ -82,7 +82,7 @@ async def get_team(
         team_id: int,
         session: AsyncSession = Depends(get_session),
 ) -> TeamResponse:
-    repo = SQLAlchemyTeamRepository(session)
+    repo = TeamRepository(session)
     team = await repo.get_by_id(team_id)
     if team is None:
         raise HTTPException(status_code=404, detail=f"Team {team_id} not found")
@@ -107,7 +107,7 @@ async def list_matches(
         limit: int = 20,
         session: AsyncSession = Depends(get_session),
 ) -> list[MatchResponse]:
-    repo = SQLAlchemyMatchRepository(session)
+    repo = MatchRepository(session)
     matches = await repo.list_recent(limit=limit)
     return [_match_to_response(m) for m in matches]
 
@@ -117,7 +117,7 @@ async def get_match(
         match_id: int,
         session: AsyncSession = Depends(get_session),
 ) -> MatchResponse:
-    repo = SQLAlchemyMatchRepository(session)
+    repo = MatchRepository(session)
     match = await repo.get_by_id(match_id)
     if match is None:
         raise HTTPException(status_code=404, detail=f"Match {match_id} not found")

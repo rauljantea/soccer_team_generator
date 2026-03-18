@@ -16,6 +16,7 @@ class Position(str, Enum):
 class Universe(str, Enum):
     STAR_WARS = "star_wars"
     POKEMON = "pokemon"
+    BLADERUNNER = "bladerunner"
 
 
 @dataclass(frozen=True)
