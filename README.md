@@ -32,7 +32,9 @@ poetry run alembic revision --autogenerate -m "description"
 ## Run
 
 ```bash
-# Local dev (SQLite)
+# Local dev
+docker-compose up
+
 poetry run uvicorn main:app --reload
 ```
 
